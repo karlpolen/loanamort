@@ -3,7 +3,7 @@ Level payment loan  functions in R
 
 ### Abstract
 
-Mortgage loans, car loans, some commercial real estate loans and other loans are structured with a fixed interest rate and equal payments that amortize the loan.  In this post, we review the math of level payment loans and present a function for analyzing them. 
+Mortgage loans, car loans, some commercial real estate loans and other loans are structured with a fixed interest rate and equal payments that amortize the loan.  In this post, we review the math of level payment loans and present a function for analyzing them. Files for this post are found at https://github.com/karlpolen/loanamort
 
 ### Defined terms
 
@@ -214,7 +214,7 @@ loanamort=function(r=NULL,bal0=NULL,pmt=NULL,n=NULL,apr=FALSE,start=NULL,freq=1)
 
 ### Illustrations of use of function
 
-*I am buying and borrowing 20,000 at 8% apr with monthly payments for 5 years.  What's the payment?*
+*I am buying a car and borrowing 20,000 at 8% apr with monthly payments for 5 years.  What's the payment?*
 
 ```{r}
 ans1=loanamort(bal0=20000,r=.08,n=5,apr=TRUE,freq=12)
