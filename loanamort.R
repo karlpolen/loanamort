@@ -15,7 +15,11 @@ loanamort=function(r=NULL,bal0=NULL,pmt=NULL,n=NULL,apr=FALSE,start=NULL,freq=1)
     }
   } else {
     cf=c(-bal0,rep(pmt,n.f))
-    d=(uniroot(function(d) {sum(cf*d^(0:n.f))},c(0,1000)))$root
+    if(0<=sum(cf)) {
+      rootrange=c(0,1.01) } else {
+      rootrange=c(1,1000)
+      }
+    d=(uniroot(function(d) {sum(cf*d^(0:n.f))},rootrange))$root
     r.f=(1/d)-1
   }
   d=1/(1+r.f)

@@ -99,9 +99,15 @@ Note the plot is discontinuous when $r=-1$, i.e. the rate is -100%.  So, it turn
 
 As discussed above, we need not concern ourselves with $r \leq -1$.  Therefore, we need not calculate roots for $d \leq 0$,
 
-R provides a function `uniroot` which can reliably be used to find a single root in a known range.  Code as simple as the following will do the trick.
+R provides a function `uniroot` which can reliably be used to find a single root in a known range.  
+
+Code as simple as the following will do the trick.  For calculation efficiency, you can confine the search for values of `d` between 0 and 1 for situations where the sum of the cash flows is greater than zero and the interest rate we are looking for is, therefore, known to be greater than zero.
 ```{r eval=FALSE}
 cf=c(-bal0,rep(pmt,n))
+if(0<=sum(cf)) {
+  rootrange=c(0,1.01)} else {
+    rootrange=c(1,1000)
+  }
 d=(uniroot(function(d) {sum(cf*d^(0:n))}),c(0,1000))$root
 r=(1/d)-1
 ```
@@ -172,7 +178,11 @@ loanamort=function(r=NULL,bal0=NULL,pmt=NULL,n=NULL,apr=FALSE,start=NULL,freq=1)
     }
   } else {
     cf=c(-bal0,rep(pmt,n.f))
-    d=(uniroot(function(d) {sum(cf*d^(0:n.f))},c(0,1000)))$root
+    if(0<=sum(cf)) {
+      rootrange=c(0,1.01) } else {
+      rootrange=c(1,1000)
+      }
+    d=(uniroot(function(d) {sum(cf*d^(0:n.f))},rootrange))$root
     r.f=(1/d)-1
   }
   d=1/(1+r.f)
@@ -214,7 +224,7 @@ loanamort=function(r=NULL,bal0=NULL,pmt=NULL,n=NULL,apr=FALSE,start=NULL,freq=1)
 
 ### Illustrations of use of function
 
-*I am buying a car and borrowing 20,000 at 8% apr with monthly payments for 5 years.  What's the payment?*
+*In May of 2013, I bought a car borrowing 20,000 at 8% apr with monthly payments for 5 years.  What's the payment?*
 
 ```{r}
 ans1=loanamort(bal0=20000,r=.08,n=5,apr=TRUE,freq=12)
@@ -233,14 +243,15 @@ sum(ans1$int)
 ans1$bal[12]
 ```
 
-*Suppose I increase my payment to $450.  How soon will be loan be paid off?*
+*A year later, I get a raise and decide to increase my payment to $500 per month.  When will the loan be paid off?*
 
 ```{r}
-ans1a=loanamort(bal0=20000,r=.08,pmt=450,apr=TRUE,freq=12)
-ans1a$n
+start=as.yearmon("2014-5")
+ans1a=loanamort(bal0=ans1$bal0,r=.08,pmt=500,apr=TRUE,freq=12)
+start+ans1a$n
 ```
 
-*I know I borrowed $20,000 for my car and I am paying $405.50 per month for 5 years, but lost the papers and am curious what my interest rate is.*
+*I know I borrowed $20,000 for my car and the original payments were $405.50 per month for 5 years, but lost the papers and am curious what my interest rate is.*
 
 ```{r}
 ans1b=loanamort(bal0=20000,pmt=ans1$pmt,apr=TRUE,n=5,freq=12)
