@@ -1,6 +1,8 @@
 Level payment loan  functions in R
 ========================================================
 
+line added from surface pc
+
 ### Abstract
 
 Mortgage loans, car loans, some commercial real estate loans and other loans are structured with a fixed interest rate and equal payments that amortize the loan.  In this post, we review the math of level payment loans and present a function for analyzing them. Files for this post are found at https://github.com/karlpolen/loanamort
