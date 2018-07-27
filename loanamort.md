@@ -95,13 +95,16 @@ and we are looking for the value of $d$ where the polynomial evaluates to zero. 
 
 Recall that $d=\frac{1}{1+r}$ .  Let's look at a plot of $d$ as a function of $r$
 
-```{r}
+
+```r
 r=seq(-3,2,.01)
 d=1/(1+r)
 plot(r,d,type='l',col='blue',ylim=c(-10,10))
 abline(v=0)
 abline(h=0)
 ```
+
+![](loanamort_files/figure-html/unnamed-chunk-1-1.png)<!-- -->
 Note the plot is discontinuous when $r=-1$, i.e. the rate is -100%.  So, it turns out that stating the polynomial in a form where $d$ is the unknown variable has a useful property.  We can solve for the one positive root $d$ which can then be further evaluated to the single interest rate (which can be positive or negative) that causes the net present value of the cash flow to be zero.  
 
 As discussed above, we need not concern ourselves with $r \leq -1$.  Therefore, we need not calculate roots for $d \leq 0$,
@@ -109,7 +112,8 @@ As discussed above, we need not concern ourselves with $r \leq -1$.  Therefore, 
 R provides a function `uniroot` which can reliably be used to find a single root in a known range.  
 
 Code as simple as the following will do the trick.  For calculation efficiency, you can confine the search for values of `d` between 0 and 1 for situations where the sum of the cash flows is greater than zero and the interest rate we are looking for is, therefore, known to be greater than zero.
-```{r eval=FALSE}
+
+```r
 cf=c(-bal0,rep(pmt,n))
 if(0<=sum(cf)) {
   rootrange=c(0,1.01)} else {
@@ -165,8 +169,16 @@ The function returns a list of values for the four loan parameters plus time ser
 
 Here is the code for the function.
 
-```{r, message=FALSE}
+
+```r
 require(zoo)
+```
+
+```
+## Warning: package 'zoo' was built under R version 3.5.1
+```
+
+```r
 require(lubridate)
 loanamort=function(r=NULL,bal0=NULL,pmt=NULL,n=NULL,apr=FALSE,start=NULL,freq=1) {
   ans=list()
@@ -233,53 +245,130 @@ loanamort=function(r=NULL,bal0=NULL,pmt=NULL,n=NULL,apr=FALSE,start=NULL,freq=1)
 
 *In May of 2013, I bought a car borrowing 20,000 at 8% apr with monthly payments for 5 years.  What's the payment?*
 
-```{r}
+
+```r
 ans1=loanamort(bal0=20000,r=.08,n=5,apr=TRUE,freq=12)
 ans1$pmt
 ```
 
+```
+## [1] 405.5279
+```
+
 *What is the total interest paid on theloan?*
 
-```{r}
+
+```r
 sum(ans1$int)
+```
+
+```
+## [1] 4331.673
 ```
 
 *What is the balance after a year?*
 
-```{r}
+
+```r
 ans1$bal[12]
+```
+
+```
+## [1] 16611.2
 ```
 
 *A year later, I get a raise and decide to increase my payment to $500 per month.  When will the loan be paid off?*
 
-```{r}
+
+```r
 start=as.yearmon("2014-5")
 ans1a=loanamort(bal0=ans1$bal0,r=.08,pmt=500,apr=TRUE,freq=12)
 start+ans1a$n
 ```
 
+```
+## [1] "Apr 2018"
+```
+
 *I know I borrowed $20,000 for my car and the original payments were $405.50 per month for 5 years, but lost the papers and am curious what my interest rate is.*
 
-```{r}
+
+```r
 ans1b=loanamort(bal0=20000,pmt=ans1$pmt,apr=TRUE,n=5,freq=12)
 ans1b$r
 ```
 
+```
+## [1] 0.07989653
+```
+
 *I borrowed $100,000 to buy a house in March, 2013 at 5% interest with monthly payments for 30 years.  I am a calendar year tax payer and want to know my interest payments by year for the duration of the loan.*  In this case, the function returns the amortization vectors as zoo objects with the index as `yearmon` class.  You can `aggregate` by year in the way shown in the second line of code.
 
-```{r}
+
+```r
 ans2=loanamort(bal0=100000,r=.05,n=30,apr=TRUE,freq=12,start=as.yearmon("2013-3"))
 aggregate(ans2$int,list(year(time(ans2$int))),sum)
 ```
 
+```
+##       2013       2014       2015       2016       2017       2018 
+## 3731.80043 4910.23681 4831.87608 4749.50628 4662.92228 4571.90847 
+##       2019       2020       2021       2022       2023       2024 
+## 4476.23823 4375.67332 4269.96331 4158.84498 4042.04163 3919.26239 
+##       2025       2026       2027       2028       2029       2030 
+## 3790.20154 3654.53768 3511.93301 3362.03241 3204.46261 3038.83125 
+##       2031       2032       2033       2034       2035       2036 
+## 2864.72586 2681.71292 2489.33669 2287.11812 2074.55366 1851.11401 
+##       2037       2038       2039       2040       2041       2042 
+## 1616.24276 1369.35505 1109.83610  837.03966  550.28644  248.86238 
+##       2043 
+##   13.32792
+```
+
 *Show an amortization schedule for this loan by calendar year.*  In the below code, we aggregate by year, summing for the cash flow and taking the last item in each year for the balance sheet. We show a function `lastinvec` which grabs the last item in a vector. 
 
-```{r}
+
+```r
 lastinvec=function(x) tail(x,1)
 Interest=aggregate(ans2$int,list(year(time(ans2$int))),sum)
 Principal=aggregate(ans2$prin,list(year(time(ans2$prin))),sum)
 Balance=aggregate(ans2$bal,list(year(time(ans2$bal))),lastinvec)
 data.frame(Interest,Principal,Balance)
+```
+
+```
+##        Interest Principal   Balance
+## 2013 3731.80043  1099.594 98900.406
+## 2014 4910.23681  1531.623 97368.783
+## 2015 4831.87608  1609.983 95758.800
+## 2016 4749.50628  1692.353 94066.447
+## 2017 4662.92228  1778.937 92287.509
+## 2018 4571.90847  1869.951 90417.558
+## 2019 4476.23823  1965.621 88451.937
+## 2020 4375.67332  2066.186 86385.751
+## 2021 4269.96331  2171.896 84213.855
+## 2022 4158.84498  2283.014 81930.840
+## 2023 4042.04163  2399.818 79531.022
+## 2024 3919.26239  2522.597 77008.425
+## 2025 3790.20154  2651.658 74356.767
+## 2026 3654.53768  2787.322 71569.446
+## 2027 3511.93301  2929.926 68639.519
+## 2028 3362.03241  3079.827 65559.692
+## 2029 3204.46261  3237.397 62322.295
+## 2030 3038.83125  3403.028 58919.267
+## 2031 2864.72586  3577.134 55342.133
+## 2032 2681.71292  3760.147 51581.987
+## 2033 2489.33669  3952.523 47629.464
+## 2034 2287.11812  4154.741 43474.723
+## 2035 2074.55366  4367.306 39107.417
+## 2036 1851.11401  4590.745 34516.671
+## 2037 1616.24276  4825.617 29691.055
+## 2038 1369.35505  5072.504 24618.550
+## 2039 1109.83610  5332.023 19286.527
+## 2040  837.03966  5604.820 13681.707
+## 2041  550.28644  5891.573  7790.134
+## 2042  248.86238  6192.997  1597.137
+## 2043   13.32792  1597.137     0.000
 ```
 
 
